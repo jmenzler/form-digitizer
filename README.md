@@ -2,7 +2,7 @@
 
 > AI-powered digitization of handwritten German ecological survey forms (A03 Kartierbögen) for forest habitat mapping.
 
-**Status:** Production &nbsp;|&nbsp; **Stack:** Python, Flask, Claude Vision API, SpatiaLite &nbsp;|&nbsp; **Source:** Private
+**Status:** Production &nbsp;|&nbsp; **Stack:** Python, Flask, Claude Vision API, SpatiaLite &nbsp;|&nbsp; **Source:** Private &nbsp;|&nbsp; **Impact:** 6x operator workflow speedup
 
 ---
 
