@@ -289,7 +289,7 @@ vs. **~10 minutes manual transcription** per form = **~17 hours saved per 100 fo
 
 ## Why This Project?
 
-This was built as an internal tool for a German environmental consulting firm (*Büro Fagus*) to solve a real operational bottleneck. Key engineering challenges:
+This was built as an internal tool for a German environmental consulting firm to solve a real operational bottleneck. Key engineering challenges:
 
 - **Handwriting OCR at scale** — Ecological shorthand (Latin abbreviations, layer codes) requires domain-specific prompting
 - **Data integrity** — The HLBK database has strict FK constraints and expects Microsoft-format GUIDs
