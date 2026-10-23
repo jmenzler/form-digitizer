@@ -9,10 +9,6 @@ Built for a one-person ecological survey office in Hesse. Solo project.
 > [!NOTE]
 > Both implementations (web tool and iPad app) are private. This repository is a case study: design decisions, evidence and screenshots.
 
-<img src="field-tablet-screenshots/a03-form-native-ipad.png" width="420" alt="Field Tablet A03 form with a synthetic demo survey in the iPad simulator">
-
-*A03 form entry in the iPad app. Simulator, synthetic survey data.*
-
 ## Why it is hard
 
 Handwriting, faint pre-printed grid lines and abbreviated or misspelled Latin species names all defeat naive OCR. A wrong species match that looks plausible is worse than an obvious miss, so the system is built around making doubt visible instead of hiding it.
@@ -21,6 +17,10 @@ Handwriting, faint pre-printed grid lines and abbreviated or misspelled Latin sp
 
 - **Paper:** scanned form, image preprocessing, vision extraction, species matching, review in a web workspace, save to SpatiaLite.
 - **Field:** iPad entry (Apple Pencil ink, GPS, species autocomplete), local session, authenticated sync into the same web workspace, review, save.
+
+<img src="field-tablet-screenshots/a03-form-native-ipad.png" width="420" alt="Field Tablet A03 form with a synthetic demo survey in the iPad simulator">
+
+*A03 form entry in the iPad app. Simulator, synthetic survey data.*
 
 ## Evidence
 
