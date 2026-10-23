@@ -1,10 +1,23 @@
+<div align="center">
+
 # HLBK Form Digitizer
+
+**Handwritten survey forms to reviewed data, from a scan or straight from the field.**
+
+![case study: code private](https://img.shields.io/badge/case%20study-code%20private-6e7781)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?logo=flask&logoColor=white)
+![Claude: Vision](https://img.shields.io/badge/Claude-Vision-D97757?logo=claude&logoColor=white)
+![Swift: iPad](https://img.shields.io/badge/Swift-iPad-F05138?logo=swift&logoColor=white)
+![SpatiaLite](https://img.shields.io/badge/SpatiaLite-003B57?logo=sqlite&logoColor=white)
+
+[Why it is hard](#why-it-is-hard) · [Two routes in](#two-routes-in) · [Evidence](#evidence) · [Design decisions](#design-decisions) · [Field Tablet sync](#field-tablet-sync)
+
+</div>
 
 Handwritten ecological survey forms (A03 Kartierbögen) take days to type in at the end of a mapping season. This project cuts that work down to reviewing a draft: a Flask tool reads scanned forms with Claude Vision and matches species names against a taxonomy, and a native iPad app captures the same form directly in the field. A human reviews every result before it is saved.
 
 Built for a one-person ecological survey office in Hesse. Solo project.
-
-**Tech:** Python · Flask · Claude Vision · RapidFuzz · SpatiaLite · Swift · SwiftUI · Core Data · PencilKit
 
 > [!NOTE]
 > Both implementations (web tool and iPad app) are private. This repository is a case study: design decisions, evidence and screenshots.
