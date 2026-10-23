@@ -1,88 +1,52 @@
 # HLBK Form Digitizer
 
-Gets German ecological survey forms (A03 Kartierbögen) into the HLBK database by two routes: a Flask web tool that extracts handwritten paper forms with Anthropic's image API and matches species names against a 21,518-species reference, and Field Tablet, a native iPad app for entry in the field. An operator reviews every result before it is saved.
+Handwritten ecological survey forms (A03 Kartierbögen) take days to type in at the end of a mapping season. This project cuts that work down to reviewing a draft: a Flask tool reads scanned forms with Claude Vision and matches species names against a taxonomy, and a native iPad app captures the same form directly in the field. A human reviews every result before it is saved.
 
-**Tech:** Python · Flask · Anthropic API (vision) · RapidFuzz · SpatiaLite · Swift/SwiftUI · Core Data · PencilKit
+Built for a one-person ecological survey office in Hesse. Solo project.
 
-The web tool is deployed as an internal tool; both the web and iPad code are private.
+**Tech:** Python · Flask · Claude Vision · RapidFuzz · SpatiaLite · Swift · SwiftUI · Core Data · PencilKit
 
-## The problem
+> [!NOTE]
+> Both implementations (web tool and iPad app) are private. This repository is a case study: design decisions, evidence and screenshots.
 
-Ecological survey forms record species observations, habitat details, and site metadata on paper. Transferring these records into the HLBK database requires someone to interpret handwriting and check the transcription, especially when species names are abbreviated or misspelled.
+<img src="field-tablet-screenshots/a03-form-native-ipad.png" width="420" alt="Field Tablet A03 form with a synthetic demo survey in the iPad simulator">
 
-## The solution
+*A03 form entry in the iPad app. Simulator, synthetic survey data.*
 
-There are two entry routes. Scanned paper forms go through image-based extraction before review. Field Tablet captures entries directly on an iPad and syncs them into a web workspace for review. An operator checks and corrects the results before saving them to the database.
+## Why it is hard
 
-For paper transcription, an operator estimated 10–15 minutes for manual entry per form, compared with 2–3 minutes for review and correction of extracted results. These are task estimates, not benchmark results or total processing times.
+Handwriting, faint pre-printed grid lines and abbreviated or misspelled Latin species names all defeat naive OCR. A wrong species match that looks plausible is worse than an obvious miss, so the system is built around making doubt visible instead of hiding it.
 
-## Architecture
+## Two routes in
 
-A Python and Flask application connects image-based extraction through Anthropic's API with RapidFuzz species matching and a browser-based review interface. Results are stored on the server. SpatiaLite provides the connection to the HLBK database.
+- **Paper:** scanned form, image preprocessing, vision extraction, species matching, review in a web workspace, save to SpatiaLite.
+- **Field:** iPad entry (Apple Pencil ink, GPS, species autocomplete), local session, authenticated sync into the same web workspace, review, save.
 
-## Features
+## Evidence
 
-### Species matching
+On one hand-transcribed page, Claude Vision extraction got 12 of 18 fields correct against 9 of 18 for an OCR + Claude Haiku pipeline. This is a single-page benchmark, not an accuracy rate.
 
-The reference database contains 21,518 species. RapidFuzz WRatio matching scores are grouped into three tiers: at least 90, 70–89, and below 70. A high score means the names are similar, not that the identification is correct.
+The author estimates that the iPad app cuts total time per survey form (field work plus desk work) by about 70%. This is an estimate, not a measurement.
 
-### Human review
+## Design decisions
 
-Extraction produces a draft transcription. The operator checks and corrects it before saving, with species-name matching helping to identify entries that need attention.
+| Decision | Why |
+|---|---|
+| Otsu thresholding, auto-calibrated and clamped to a fixed range | Removes faint pre-printed grid marks while keeping handwriting, which would otherwise confuse the vision model |
+| Iterative compression to a token budget (quality first, then dimensions) | Bounds input tokens and therefore cost per form |
+| Prompt per form section, confidence per field, multi-page results merged | Long forms extract more reliably in parts, and low-confidence fields can be flagged |
+| Two-phase species matching: exact lookup, then RapidFuzz WRatio fallback, tiers at 90 and 70 | Handwriting and abbreviations break exact match. The score means name similarity, not correct identification, so 70-89 is flagged and below 70 needs a manual choice |
+| Human review before every save | Extraction output is a draft transcription, never a record |
+| Unit-of-work writes into SpatiaLite | A single match failure must not leave a half-written survey record |
+| Native SwiftUI + PencilKit instead of a browser app | Apple Pencil support is far better natively |
 
-### Batch processing
+## Field Tablet sync
 
-Batch extraction uses bounded concurrency rather than processing every form sequentially.
+Sessions move Draft, Completed, Synced. Completed sessions are posted over authenticated HTTP into the web workspace with `validated: false`, so review still applies. Sessions and cached templates are kept in Core Data for offline entry. An end-to-end offline-to-production round trip has not been verified.
 
-## Field Tablet
+<img src="field-tablet-screenshots/a03-species-autocomplete-native-ipad.png" width="420" alt="Species autocomplete matching fagsy to Fagus sylvatica (Rotbuche) in the iPad simulator">
 
-Field Tablet is a native SwiftUI iPad app for entering surveys in the field. It follows the shared A03 template and keeps sessions and cached templates in Core Data for offline entry. A species catalog supports name selection; PencilKit ink and photos capture supporting observations. Location capture includes point GPS and foreground tracks with consent.
-
-Sessions move through Draft, Completed, and Synced states. Completed sessions sync over authenticated HTTP into the web tool's workspaces. The app normalizes the digital fields to the shared payload format and sends them with `validated: false` for downstream review. These fields do not require the paper-scan extraction step.
-
-An end-to-end offline-to-production round trip has not been verified.
-
-<img src="field-tablet-screenshots/a03-form-native-ipad.png" width="420" alt="Field Tablet A03 form with a synthetic DEMO survey in the iPad simulator">
-
-*A03 form entry. iPad simulator, synthetic survey data.*
-
-<img src="field-tablet-screenshots/a03-species-autocomplete-native-ipad.png" width="420" alt="Field Tablet species autocomplete matching fagsy to Fagus sylvatica (Rotbuche) in the iPad simulator">
-
-*Species autocomplete: fagsy → Fagus sylvatica (Rotbuche). iPad simulator, synthetic survey data.*
-
-The displayed Nationalpark Kellerwald-Edersee 2022 title belongs to the form template, not a captured survey location.
-
-## Tech stack
-
-### Web tool
-
-- Python 3.12+ and Flask
-- Anthropic image inputs for extraction
-- RapidFuzz for species-name matching
-- SpatiaLite for database integration
-- Browser-based review and server-side storage
-
-### Field Tablet
-
-- SwiftUI for the native iPad interface
-- Core Data for local sessions and template caching
-- PencilKit for ink input
-- Authenticated HTTP sync to web workspaces
-
-## Data flow
-
-- Paper: scanned form → extraction → species matching → workspace review and correction → database save.
-- Field Tablet: native field entry → local session → authenticated workspace sync → review and correction → database save.
-
-## Cost considerations
-
-API costs for paper-form extraction depend on the model and the amount of input and output.
-
-## License
-
-This is a portfolio case study. The source code is in a private repository.
-
-If you're interested in the technical details or would like to discuss the implementation, feel free to reach out.
+*Species autocomplete: fagsy to Fagus sylvatica (Rotbuche). Simulator, synthetic survey data. The park title shown belongs to the form template, not a captured survey location.*
 
 ---
 
